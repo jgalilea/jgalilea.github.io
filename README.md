@@ -15,7 +15,7 @@ Se excluyen los forks, los repos archivados y los que tengan el topic `no-portfo
 
 ## Datos personales
 
-El nombre, el texto de «Sobre mí» y los enlaces (GitHub, LinkedIn, email) están en `src/config.ts`.
+El nombre, el texto de «Sobre mí» y los enlaces con logo (GitHub, LinkedIn, CV y email) están en `src/config.ts`. Un enlace vacío no se muestra. El bloque de contacto del pie usa el email, o LinkedIn si no hay email.
 
 Al sincronizar también se genera `public/og.png`, la imagen que se ve al compartir el enlace (Open Graph), con tu nombre y capturas de los proyectos.
 

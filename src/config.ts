@@ -17,10 +17,11 @@ export const profile = {
       'Most of what I make is TypeScript and Python, serverless whenever possible: your data stays on your device.',
     ],
   },
-  // Links shown under "About me". Leave a url empty to hide it.
+  // Links shown in the header and footer, with their logos. Leave one empty to hide it.
   links: {
     github: 'https://github.com/jgalilea',
-    linkedin: '',
-    email: '',
+    linkedin: '', // e.g. https://www.linkedin.com/in/your-name/
+    cv: '', // link to the PDF, e.g. a Google Drive share link
+    email: '', // also enables the "Email me" button in the contact block
   },
 };

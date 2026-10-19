@@ -3,6 +3,7 @@ import '../styles/global.css';
 import ProjectCard from '../components/ProjectCard.astro';
 import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 import LanguageSwitcher from '../components/LanguageSwitcher.astro';
+import SocialLinks from '../components/SocialLinks.astro';
 import { getProjects, GITHUB_USER } from '../lib/projects';
 import { defaultLang, homePath, locales, useTranslations, type Lang } from '../i18n/ui';
 import { profile } from '../config';
@@ -24,11 +25,12 @@ const description = t('meta.description', { name: profile.name, role: profile.ro
 const pageUrl = new URL(homePath(lang), Astro.site);
 const ogImage = new URL('/og.png', Astro.site);
 
-const links = [
-  { key: 'links.github', url: profile.links.github },
-  { key: 'links.linkedin', url: profile.links.linkedin },
-  { key: 'links.email', url: profile.links.email && `mailto:${profile.links.email}` },
-] as const;
+// The contact block prefers email and falls back to LinkedIn.
+const contact = profile.links.email
+  ? { label: t('contact.email'), url: `mailto:${profile.links.email}` }
+  : profile.links.linkedin
+    ? { label: t('contact.linkedin'), url: profile.links.linkedin }
+    : null;
 const heading = 'text-2xl font-bold tracking-tight';
 
 const countBy = (values: string[]) => {
@@ -117,6 +119,9 @@ const chip =
         <div>
           <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">{profile.name}</h1>
           <p class="mt-2 text-lg text-slate-600 dark:text-slate-400">{profile.role[lang]}</p>
+          <div class="mt-4">
+            <SocialLinks lang={lang} />
+          </div>
         </div>
       </header>
 
@@ -125,28 +130,6 @@ const chip =
         <div class="mt-4 space-y-3 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
           {profile.about[lang].map((paragraph) => <p>{paragraph}</p>)}
         </div>
-        <ul class="mt-5 flex flex-wrap gap-3">
-          {
-            links
-              .filter((link) => link.url)
-              .map((link) => (
-                <li>
-                  <a
-                    href={link.url}
-                    target={link.url.startsWith('mailto:') ? undefined : '_blank'}
-                    rel="noopener me"
-                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:text-sky-300"
-                  >
-                    {t(link.key)}
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path d="M11 3a1 1 0 1 0 0 2h2.59l-6.3 6.29a1 1 0 1 0 1.42 1.42L15 6.41V9a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1h-5Z" />
-                      <path d="M5 5a2 2 0 0 0-2 2v8c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-3a1 1 0 1 0-2 0v3H5V7h3a1 1 0 0 0 0-2H5Z" />
-                    </svg>
-                  </a>
-                </li>
-              ))
-          }
-        </ul>
       </section>
 
       {
@@ -272,8 +255,37 @@ const chip =
       </main>
       <p id="empty" class="hidden py-16 text-center text-slate-500">{t('empty')}</p>
 
-      <footer class="mt-16 text-center text-xs text-slate-400">
-        {t('footer', { date: new Date().toLocaleDateString(locales[lang], { dateStyle: 'long' }) })}
+      <footer class="mt-24 border-t border-slate-200 pt-12 dark:border-slate-800">
+        {
+          contact && (
+            <section
+              aria-labelledby="contact"
+              class="mb-12 flex flex-col items-start justify-between gap-6 rounded-2xl bg-sky-50 p-8 sm:flex-row sm:items-center dark:bg-sky-950/40"
+            >
+              <div>
+                <h2 id="contact" class={heading}>
+                  {t('contact.title')}
+                </h2>
+                <p class="mt-2 max-w-xl text-slate-600 dark:text-slate-300">{t('contact.text')}</p>
+              </div>
+              <a
+                href={contact.url}
+                target={contact.url.startsWith('mailto:') ? undefined : '_blank'}
+                rel="noopener"
+                class="shrink-0 rounded-lg bg-sky-600 px-5 py-3 font-medium text-white shadow-sm transition hover:bg-sky-700 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+              >
+                {contact.label}
+              </a>
+            </section>
+          )
+        }
+        <div class="flex flex-col items-center justify-between gap-4 text-sm text-slate-500 sm:flex-row dark:text-slate-400">
+          <p>© {new Date().getFullYear()} {profile.name}</p>
+          <SocialLinks lang={lang} variant="icons" />
+        </div>
+        <p class="mt-6 text-center text-xs text-slate-400 sm:text-left dark:text-slate-500">
+          {t('footer', { date: new Date().toLocaleDateString(locales[lang], { dateStyle: 'long' }) })}
+        </p>
       </footer>
     </div>
 
