@@ -1,4 +1,4 @@
-# jagalile.github.io
+# jgalilea.github.io
 
 Portfolio con todos mis proyectos de GitHub, hecho con [Astro](https://astro.build) y [Tailwind CSS](https://tailwindcss.com).
 

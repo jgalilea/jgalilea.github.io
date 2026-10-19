@@ -1,6 +1,7 @@
 // Fetches the user's repositories from the GitHub API at build time.
 
-export const GITHUB_USER = 'jagalile';
+// In GitHub Actions the owner comes from the repo, so renaming the account doesn't break the site.
+export const GITHUB_USER = process.env.GITHUB_REPOSITORY_OWNER ?? 'jgalilea';
 
 // Repos with this topic are hidden from the portfolio.
 const HIDE_TOPIC = 'no-portfolio';
