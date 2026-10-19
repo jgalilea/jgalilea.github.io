@@ -109,11 +109,23 @@ async function downloadPreviewFile(repo: Repo): Promise<string | null> {
 async function screenshot(browser: Browser, repo: Repo): Promise<string | null> {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   try {
-    await page.goto(repo.homepage!, { waitUntil: 'networkidle', timeout: 30_000 }).catch(async () => {
-      // Pages that keep connections open never go idle; settle for the load event.
-      await page.waitForLoadState('load', { timeout: 15_000 });
-    });
+    const response = await page
+      .goto(repo.homepage!, { waitUntil: 'networkidle', timeout: 30_000 })
+      .catch(async () => {
+        // Pages that keep connections open never go idle; settle for the load event.
+        await page.waitForLoadState('load', { timeout: 15_000 });
+        return null;
+      });
     await page.waitForTimeout(1_500); // let animations and fonts settle
+
+    // Bot checks and failed loads render an empty page: better no image than a blank one.
+    const visible = await page.evaluate(
+      () => document.body.innerText.trim().length > 0 || !!document.querySelector('img, canvas, svg, video'),
+    );
+    if (!visible) {
+      console.warn(`  ${repo.homepage} looks empty (HTTP ${response?.status() ?? '?'}, title "${await page.title()}")`);
+      return null;
+    }
     const name = `${repo.name.toLowerCase()}.jpg`;
     await page.screenshot({ path: new URL(name, PREVIEWS_DIR).pathname, type: 'jpeg', quality: 75 });
     return name;
