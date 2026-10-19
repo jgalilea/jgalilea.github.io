@@ -22,9 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: withastro/action@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium for website screenshots
+        run: npx playwright install --with-deps chromium
+      - run: npm run build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PORTFOLIO_TOKEN is a personal token that can read private repos.
+          # Without it only public repos are listed.
+          GITHUB_TOKEN: ${{ secrets.PORTFOLIO_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
 
   deploy:
     needs: build

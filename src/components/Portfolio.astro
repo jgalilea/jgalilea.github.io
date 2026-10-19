@@ -3,7 +3,7 @@ import '../styles/global.css';
 import ProjectCard from '../components/ProjectCard.astro';
 import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 import LanguageSwitcher from '../components/LanguageSwitcher.astro';
-import { getProjects, GITHUB_USER } from '../lib/github';
+import { getProjects, GITHUB_USER } from '../lib/projects';
 import { defaultLang, homePath, locales, useTranslations, type Lang } from '../i18n/ui';
 
 interface Props {
@@ -23,6 +23,9 @@ const countBy = (values: string[]) => {
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 };
 const tags = countBy(projects.flatMap((p) => p.topics));
+// Only the most used tags are shown until the visitor expands the list.
+const VISIBLE_TAGS = 10;
+const hiddenTags = Math.max(0, tags.length - VISIBLE_TAGS);
 const languages = countBy(projects.flatMap((p) => (p.language ? [p.language] : [])));
 
 const chip =
@@ -137,11 +140,31 @@ const chip =
           tags.length > 0 && (
             <div class="flex flex-wrap items-center gap-2">
               <span class="mr-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('filters.tags')}</span>
-              {tags.map(([tag, n]) => (
-                <button type="button" class={chip} data-filter="tag" data-value={tag} aria-pressed="false">
+              {tags.map(([tag, n], i) => (
+                <button
+                  type="button"
+                  class={chip}
+                  data-filter="tag"
+                  data-value={tag}
+                  data-extra={i >= VISIBLE_TAGS ? 'true' : undefined}
+                  hidden={i >= VISIBLE_TAGS}
+                  aria-pressed="false"
+                >
                   {tag} <span class="opacity-60">{n}</span>
                 </button>
               ))}
+              {hiddenTags > 0 && (
+                <button
+                  id="more-tags"
+                  type="button"
+                  aria-expanded="false"
+                  data-more={t('filters.more', { count: hiddenTags })}
+                  data-less={t('filters.less')}
+                  class="px-2 py-1 text-sm font-medium text-sky-700 hover:underline dark:text-sky-400"
+                >
+                  {t('filters.more', { count: hiddenTags })}
+                </button>
+              )}
             </div>
           )
         }
@@ -192,6 +215,8 @@ const chip =
       const empty = document.getElementById('empty')!;
       const clear = document.getElementById('clear')!;
       const chips = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+      const moreTags = document.getElementById('more-tags');
+      let tagsExpanded = false;
 
       const active = { tag: new Set<string>(), language: new Set<string>() };
 
@@ -240,7 +265,14 @@ const chip =
 
         for (const chip of chips) {
           const set = active[chip.dataset.filter as keyof typeof active];
-          chip.setAttribute('aria-pressed', String(set.has(chip.dataset.value!)));
+          const pressed = set.has(chip.dataset.value!);
+          chip.setAttribute('aria-pressed', String(pressed));
+          // Selected tags stay visible even when the list is collapsed.
+          if (chip.dataset.extra) chip.hidden = !tagsExpanded && !pressed;
+        }
+        if (moreTags) {
+          moreTags.textContent = tagsExpanded ? moreTags.dataset.less! : moreTags.dataset.more!;
+          moreTags.setAttribute('aria-expanded', String(tagsExpanded));
         }
 
         const filtering = terms.length > 0 || active.tag.size > 0 || active.language.size > 0;
@@ -267,6 +299,10 @@ const chip =
       grid.addEventListener('click', (e) => {
         const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-tag-chip]');
         if (chip) toggle('tag', chip.dataset.tagChip!);
+      });
+      moreTags?.addEventListener('click', () => {
+        tagsExpanded = !tagsExpanded;
+        update();
       });
       search.addEventListener('input', update);
       sort.addEventListener('change', update);
