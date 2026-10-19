@@ -9,7 +9,15 @@ Antes de compilar, `scripts/sync-projects.ts` lee los repos de la API de GitHub 
 - **Botón «Pruébalo»**: el campo *Website* del repo (si está vacío, no aparece).
 - **Imagen**: un `preview.png`/`.jpg`/`.webp` en la raíz del repo o en `.github/`; si no hay, una captura de la web hecha con Playwright; si no tiene web, un fondo generado.
 
+Los repos con el topic `featured` aparecen además en la sección **Destacados**, con una tarjeta más grande.
+
 Se excluyen los forks, los repos archivados y los que tengan el topic `no-portfolio`.
+
+## Datos personales
+
+El nombre, el texto de «Sobre mí» y los enlaces (GitHub, LinkedIn, email) están en `src/config.ts`.
+
+Al sincronizar también se genera `public/og.png`, la imagen que se ve al compartir el enlace (Open Graph), con tu nombre y capturas de los proyectos.
 
 ## Repos privados
 

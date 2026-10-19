@@ -4,3 +4,4 @@ dist/
 .env
 src/data/
 public/previews/
+public/og.png

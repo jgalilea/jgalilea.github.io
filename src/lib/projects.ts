@@ -6,8 +6,11 @@ import { resolve } from 'node:path';
 // In GitHub Actions the owner comes from the repo, so renaming the account doesn't break the site.
 export const GITHUB_USER = process.env.GITHUB_REPOSITORY_OWNER ?? 'jgalilea';
 
+// Repos with this topic go in the featured section.
+export const FEATURED_TOPIC = 'featured';
+
 // Topics that control the portfolio itself and aren't shown as tags.
-export const HIDDEN_TOPICS = ['portfolio', 'no-portfolio'];
+export const HIDDEN_TOPICS = ['portfolio', 'no-portfolio', FEATURED_TOPIC];
 
 export interface Project {
   name: string;
@@ -19,6 +22,7 @@ export interface Project {
   stars: number;
   updatedAt: string;
   private: boolean;
+  featured: boolean;
   /** Path of the preview image inside the site, if there is one. */
   image: string | null;
 }

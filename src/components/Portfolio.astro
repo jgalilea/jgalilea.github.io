@@ -5,6 +5,7 @@ import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 import LanguageSwitcher from '../components/LanguageSwitcher.astro';
 import { getProjects, GITHUB_USER } from '../lib/projects';
 import { defaultLang, homePath, locales, useTranslations, type Lang } from '../i18n/ui';
+import { profile } from '../config';
 
 interface Props {
   lang: Lang;
@@ -16,6 +17,19 @@ const t = useTranslations(lang);
 const projects = (await getProjects()).sort(
   (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
 );
+const featured = projects.filter((p) => p.featured);
+
+const title = `${profile.name} · ${t('meta.title')}`;
+const description = t('meta.description', { name: profile.name, role: profile.role[lang].toLowerCase() });
+const pageUrl = new URL(homePath(lang), Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+
+const links = [
+  { key: 'links.github', url: profile.links.github },
+  { key: 'links.linkedin', url: profile.links.linkedin },
+  { key: 'links.email', url: profile.links.email && `mailto:${profile.links.email}` },
+] as const;
+const heading = 'text-2xl font-bold tracking-tight';
 
 const countBy = (values: string[]) => {
   const counts = new Map<string, number>();
@@ -38,9 +52,19 @@ const chip =
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{GITHUB_USER} · {t('meta.title')}</title>
-    <meta name="description" content={t('meta.description', { user: GITHUB_USER })} />
-    <link rel="canonical" href={new URL(homePath(lang), Astro.site)} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={pageUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:locale" content={locales[lang].replace('-', '_')} />
+    <meta name="twitter:card" content="summary_large_image" />
     {
       (Object.keys(locales) as Lang[]).map((code) => (
         <link rel="alternate" hreflang={code} href={new URL(homePath(code), Astro.site)} />
@@ -84,24 +108,71 @@ const chip =
           <ThemeSwitcher lang={lang} />
         </div>
         <img
-          src={`https://github.com/${GITHUB_USER}.png?size=160`}
+          src={`https://github.com/${GITHUB_USER}.png?size=192`}
           alt=""
-          width="80"
-          height="80"
-          class="h-20 w-20 rounded-full ring-4 ring-white dark:ring-slate-800"
+          width="96"
+          height="96"
+          class="h-24 w-24 rounded-full ring-4 ring-white dark:ring-slate-800"
         />
         <div>
-          <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{t('header.title')}</h1>
-          <p class="mt-2 text-slate-600 dark:text-slate-400">
-            {t('header.intro')}{' '}
-            <a href={`https://github.com/${GITHUB_USER}`} class="font-medium text-sky-700 hover:underline dark:text-sky-400"
-              >github.com/{GITHUB_USER}</a
-            >.
-          </p>
+          <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">{profile.name}</h1>
+          <p class="mt-2 text-lg text-slate-600 dark:text-slate-400">{profile.role[lang]}</p>
         </div>
       </header>
 
-      <section class="mt-10 space-y-4" aria-label={t('filters.label')}>
+      <section class="mt-12 max-w-3xl" aria-labelledby="about">
+        <h2 id="about" class={heading}>{t('about.title')}</h2>
+        <div class="mt-4 space-y-3 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+          {profile.about[lang].map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+        <ul class="mt-5 flex flex-wrap gap-3">
+          {
+            links
+              .filter((link) => link.url)
+              .map((link) => (
+                <li>
+                  <a
+                    href={link.url}
+                    target={link.url.startsWith('mailto:') ? undefined : '_blank'}
+                    rel="noopener me"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:text-sky-300"
+                  >
+                    {t(link.key)}
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path d="M11 3a1 1 0 1 0 0 2h2.59l-6.3 6.29a1 1 0 1 0 1.42 1.42L15 6.41V9a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1h-5Z" />
+                      <path d="M5 5a2 2 0 0 0-2 2v8c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-3a1 1 0 1 0-2 0v3H5V7h3a1 1 0 0 0 0-2H5Z" />
+                    </svg>
+                  </a>
+                </li>
+              ))
+          }
+        </ul>
+      </section>
+
+      {
+        featured.length > 0 && (
+          <section class="mt-16" aria-labelledby="featured">
+            <h2 id="featured" class={heading}>
+              {t('featured.title')}
+            </h2>
+            <div class="mt-6 grid gap-6">
+              {featured.map((project) => (
+                <ProjectCard project={project} lang={lang} featured />
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      <h2 id="projects" class:list={[heading, 'mt-16']}>{t('projects.title')}</h2>
+      <p class="mt-2 text-slate-600 dark:text-slate-400">
+        {t('projects.intro')}{' '}
+        <a href={`https://github.com/${GITHUB_USER}`} class="font-medium text-sky-700 hover:underline dark:text-sky-400"
+          >github.com/{GITHUB_USER}</a
+        >.
+      </p>
+
+      <section class="mt-6 space-y-4" aria-label={t('filters.label')}>
         <div class="flex flex-col gap-3 sm:flex-row">
           <label class="relative flex-1">
             <span class="sr-only">{t('search.label')}</span>
@@ -296,9 +367,13 @@ const chip =
           toggle(chip.dataset.filter as keyof typeof active, chip.dataset.value!),
         ),
       );
-      grid.addEventListener('click', (e) => {
+      // Tag chips on any card, featured ones included, filter the project list.
+      document.addEventListener('click', (e) => {
         const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-tag-chip]');
-        if (chip) toggle('tag', chip.dataset.tagChip!);
+        if (!chip) return;
+        const outsideGrid = !grid.contains(chip);
+        toggle('tag', chip.dataset.tagChip!);
+        if (outsideGrid) document.getElementById('projects')!.scrollIntoView({ behavior: 'smooth' });
       });
       moreTags?.addEventListener('click', () => {
         tagsExpanded = !tagsExpanded;

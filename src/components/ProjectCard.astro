@@ -5,9 +5,11 @@ import { locales, useTranslations, type Lang } from '../i18n/ui';
 interface Props {
   project: Project;
   lang: Lang;
+  /** Bigger, horizontal layout for the featured section. */
+  featured?: boolean;
 }
 
-const { project, lang } = Astro.props;
+const { project, lang, featured = false } = Astro.props;
 const t = useTranslations(lang);
 const tags = project.topics;
 const languageColors: Record<string, string> = {
@@ -38,7 +40,10 @@ const searchText = [project.name, project.summary, project.language, ...tags]
 ---
 
 <article
-  class="project group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
+  class:list={[
+    'group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700',
+    featured ? 'md:flex-row' : 'project',
+  ]}
   data-search={searchText}
   data-tags={tags.join(',')}
   data-language={project.language ?? ''}
@@ -47,7 +52,10 @@ const searchText = [project.name, project.summary, project.language, ...tags]
   data-stars={project.stars}
 >
   <div
-    class="aspect-[16/10] overflow-hidden border-b border-slate-100 bg-slate-100 dark:border-slate-800 dark:bg-slate-800"
+    class:list={[
+      'aspect-[16/10] shrink-0 overflow-hidden border-b border-slate-100 bg-slate-100 dark:border-slate-800 dark:bg-slate-800',
+      featured && 'md:aspect-auto md:min-h-80 md:w-3/5 md:border-r md:border-b-0',
+    ]}
   >
     {
       project.image ? (
@@ -71,9 +79,14 @@ const searchText = [project.name, project.summary, project.language, ...tags]
     }
   </div>
 
-  <div class="flex flex-1 flex-col p-5">
+  <div class:list={['flex flex-1 flex-col p-5', featured && 'md:p-8']}>
     <header class="flex items-start justify-between gap-3">
-      <h2 class="flex flex-wrap items-center gap-2 text-lg font-semibold break-words text-slate-900 dark:text-slate-100">
+      <h3
+        class:list={[
+          'flex flex-wrap items-center gap-2 font-semibold break-words text-slate-900 dark:text-slate-100',
+          featured ? 'text-2xl' : 'text-lg',
+        ]}
+      >
         {project.name}
         {
           project.private && (
@@ -89,7 +102,7 @@ const searchText = [project.name, project.summary, project.language, ...tags]
             </span>
           )
         }
-      </h2>
+      </h3>
       {
         project.stars > 0 && (
           <span class="shrink-0 text-sm text-slate-500 dark:text-slate-400" title={t('project.stars')}>
@@ -99,7 +112,12 @@ const searchText = [project.name, project.summary, project.language, ...tags]
       }
     </header>
 
-    <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+    <p
+      class:list={[
+        'mt-2 flex-1 leading-relaxed text-slate-600 dark:text-slate-300',
+        featured ? 'text-base' : 'text-sm',
+      ]}
+    >
       {project.summary ?? t('project.noDescription')}
     </p>
 
