@@ -20,7 +20,7 @@ export const profile = {
   // Links shown in the header and footer, with their logos. Leave one empty to hide it.
   links: {
     github: 'https://github.com/jgalilea',
-    linkedin: '', // e.g. https://www.linkedin.com/in/your-name/
+    linkedin: 'https://www.linkedin.com/in/jgalilea/',
     cv: '', // link to the PDF, e.g. a Google Drive share link
     email: '', // also enables the "Email me" button in the contact block
   },
