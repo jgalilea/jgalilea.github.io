@@ -138,7 +138,7 @@ const chip =
             <h2 id="featured" class={heading}>
               {t('featured.title')}
             </h2>
-            <div class="mt-6 grid gap-6">
+            <div class="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {featured.map((project) => (
                 <ProjectCard project={project} lang={lang} featured />
               ))}
