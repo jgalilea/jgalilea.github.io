@@ -9,7 +9,7 @@ Antes de compilar, `scripts/sync-projects.ts` lee los repos de la API de GitHub 
 - **Botón «Pruébalo»**: el campo *Website* del repo (si está vacío, no aparece).
 - **Imagen**: un `preview.png`/`.jpg`/`.webp` en la raíz del repo o en `.github/`; si no hay, una captura de la web hecha con Playwright; si no tiene web, un fondo generado.
 
-Los repos con el topic `featured` aparecen además en la sección **Destacados**, con una tarjeta más grande.
+Los repos con el topic `featured` aparecen además en la sección **Destacados**, como una tarjeta visual con la imagen de fondo.
 
 Se excluyen los forks, los repos archivados y los que tengan el topic `no-portfolio`.
 
