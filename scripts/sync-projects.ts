@@ -14,6 +14,10 @@ const HIDE_TOPIC = 'no-portfolio';
 const SHOW_PRIVATE_TOPIC = 'portfolio';
 // A repo can provide its own preview image with one of these names.
 const PREVIEW_FILE = /^preview\.(png|jpe?g|webp)$/i;
+// Markdown and HTML images in a README.
+const README_IMAGE = /!\[[^\]]*\]\(\s*<?([^\s)>]+)|<img\b[^>]*?\bsrc=["']([^"']+)/gi;
+// Decorations that aren't worth showing as a preview, judging by their file name.
+const NOT_A_SCREENSHOT = /badge|logo|icon/i;
 
 const API = 'https://api.github.com';
 const PREVIEWS_DIR = new URL('../public/previews/', import.meta.url);
@@ -102,6 +106,45 @@ async function downloadPreviewFile(repo: Repo): Promise<string | null> {
     const ext = file.name.split('.').pop()!.toLowerCase();
     const name = `${repo.name.toLowerCase()}.${ext}`;
     await writeFile(new URL(name, PREVIEWS_DIR), Buffer.from(await raw.arrayBuffer()));
+    return name;
+  }
+  return null;
+}
+
+/** Tells the image format from its first bytes; READMEs also link SVGs, GIFs and HTML pages. */
+function imageExtension(bytes: Buffer): string | null {
+  if (bytes.subarray(0, 4).toString('hex') === '89504e47') return 'png';
+  if (bytes.subarray(0, 3).toString('hex') === 'ffd8ff') return 'jpg';
+  if (bytes.subarray(8, 12).toString('latin1') === 'WEBP') return 'webp';
+  return null;
+}
+
+/** Uses the first real image of the README, which is usually a screenshot of the project. */
+async function downloadReadmeImage(repo: Repo): Promise<string | null> {
+  const contents = `${API}/repos/${repo.owner.login}/${repo.name}/contents/`;
+  const res = await fetch(`${API}/repos/${repo.owner.login}/${repo.name}/readme`, { headers: headers() });
+  if (!res.ok) return null;
+  const readme: { path: string; content: string } = await res.json();
+  const text = Buffer.from(readme.content, 'base64')
+    .toString('utf8')
+    .replace(/<!--[\s\S]*?-->|```[\s\S]*?```/g, '');
+
+  for (const [, markdownSrc, htmlSrc] of text.matchAll(README_IMAGE)) {
+    const url = new URL((markdownSrc ?? htmlSrc).replace(/^\/+/, ''), contents + readme.path);
+    if (NOT_A_SCREENSHOT.test(url.pathname.split('/').pop()!)) continue;
+
+    // Relative paths go through the API, which also works for private repos.
+    // The token must stay out of requests to any other host.
+    const fromRepo = url.href.startsWith(contents);
+    const raw = await fetch(url, fromRepo ? { headers: headers('application/vnd.github.raw+json') } : {}).catch(
+      () => null,
+    );
+    if (!raw?.ok) continue;
+    const bytes = Buffer.from(await raw.arrayBuffer());
+    const ext = imageExtension(bytes);
+    if (!ext) continue;
+    const name = `${repo.name.toLowerCase()}.${ext}`;
+    await writeFile(new URL(name, PREVIEWS_DIR), bytes);
     return name;
   }
   return null;
@@ -208,6 +251,7 @@ async function main() {
       browser ??= await chromium.launch();
       image = await screenshot(browser, repo);
     }
+    image ??= await downloadReadmeImage(repo);
     console.log(`  ${repo.name}: ${image ?? 'no preview'}`);
 
     projects.push({
