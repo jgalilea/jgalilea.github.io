@@ -109,7 +109,8 @@ async function downloadPreviewFile(repo: Repo): Promise<string | null> {
 
 /** Takes a screenshot of the project's website. */
 async function screenshot(browser: Browser, repo: Repo): Promise<string | null> {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  // A narrow viewport keeps the page readable at card size; double density keeps it sharp.
+  const page = await browser.newPage({ viewport: { width: 1024, height: 640 }, deviceScaleFactor: 2 });
   try {
     const response = await page
       .goto(repo.homepage!, { waitUntil: 'networkidle', timeout: 30_000 })
@@ -129,7 +130,7 @@ async function screenshot(browser: Browser, repo: Repo): Promise<string | null> 
       return null;
     }
     const name = `${repo.name.toLowerCase()}.jpg`;
-    await page.screenshot({ path: new URL(name, PREVIEWS_DIR).pathname, type: 'jpeg', quality: 75 });
+    await page.screenshot({ path: new URL(name, PREVIEWS_DIR).pathname, type: 'jpeg', quality: 80 });
     return name;
   } catch (error) {
     console.warn(`  could not screenshot ${repo.homepage}: ${(error as Error).message.split('\n')[0]}`);
